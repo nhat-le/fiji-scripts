@@ -1,0 +1,109 @@
+// "StartupMacros"
+// The macros and tools in this file ("StartupMacros.txt") are 
+// automatically installed in the Plugins>Macros submenu and
+// in the toolbar when ImageJ starts up.
+
+// The "AutoRun" macro has been replaced by the Edit>Options>Startup command.
+
+  macro "Command Finder Built-in Tool" {}
+  macro "Developer Menu Built-in Tool" {}
+  macro "Brush Built-in Tool" {}
+  macro "Flood Filler Built-in Tool" {}
+  macro "Arrow Built-in Tool" {}
+
+  var pmCmds = newMenu("Popup Menu",
+       newArray("Help...", "Rename...", "Duplicate...", "Original Scale", 
+       "Paste Control...", "-", "Record...", "Capture Screen ", "Monitor Memory...", 
+       "List Commands...", "Control Panel...", "Startup Macros...", "Search..."));
+
+  macro "Popup Menu" {
+      cmd = getArgument();
+      if (cmd=="Help...")
+           showMessage("About Popup Menu",
+               "To customize this menu, edit the line that starts with\n\"var pmCmds\" in ImageJ/macros/StartupMacros.txt.");
+      else
+          run(cmd);
+  }
+
+ macro "-" {} //menu divider
+
+  macro "About Startup Macros..." {
+      path = getDirectory("macros")+"About Startup Macros";
+      if (!File.exists(path))
+          exit("\"About Startup Macros\" not found in ImageJ/macros/.");
+      open(path);
+  }
+
+  // This example macro demonstrates how to create a
+  // custom command with a keyboard shortcut.
+  //macro "Save As JPEG... [j]" {
+  //   quality = call("ij.plugin.JpegWriter.getQuality");
+  //   quality = getNumber("JPEG quality (0-100):", quality);
+  //   run("Input/Output...", "jpeg="+quality);
+  //   saveAs("Jpeg");
+  //}
+
+macro "Auto resize [1]" {
+    run("Size...", "width=512 height=512 depth=" + nSlices + " average interpolation=Bilinear");
+}
+
+macro "Auto Template Registration...[6]" {
+	// Macro to automate a double registration using Template Matching plugin.
+	//Select directory containing original .tif files
+	//directory = getDirectory("");
+	//Select file to register - one channel at a time.
+	path = File.openDialog("Select a file to register...");
+	open(path);
+	directory = File.getParent(path);
+	titleOriginal = getTitle();
+	titleShort = replace (titleOriginal, ".tif","");
+
+	// Resize 
+	run("Size...", "width=512 height=512 depth=" + nSlices + " average interpolation=Bilinear");
+	
+	// Generate z projection to use for alignment.
+	run("Z Project...", "projection=[Average Intensity]");
+	titleZAvg=getTitle();
+	fullPath = directory + "\\" + titleOriginal;
+	run("Concatenate...", "  title=[" + titleShort + "-reg] image1=" + titleZAvg + " image2=" + titleOriginal + " image3=[-- None --]");
+	titleReg1=getTitle();
+	//Select area for alignment template
+	setTool("rectangle");
+	waitForUser("Make selection...")
+	Roi.getBounds(x, y, width, height);
+	//Run alignment, first pass
+	run("Align slices in stack...", "method=5 windowsizex=" + width + " windowsizey=" + height + " x0=" + x + " y0=" + y + " swindow=0 subpixel=true itpmethod=1 ref.slice=1 show=false");
+	run("Delete Slice");
+	run("Z Project...", "projection=[Average Intensity]");
+	titleZAvg=getTitle();
+	//saveAs("Jpeg",directory + "\\" + titleZAvg);  //Save second z projection for reference, use for second alignment step
+	run("Concatenate...", "  title=[" + titleShort + "-reg2] image1=" + titleZAvg + " image2=" + titleReg1 + " image3=[-- None --]");
+	//Run second alignment pass
+	run("Align slices in stack...", "method=5 windowsizex=" + width + " windowsizey=" + height + " x0=" + x + " y0=" + y + " swindow=0 subpixel=true itpmethod=1 ref.slice=1 show=false");
+	run("Delete Slice");
+	//Crop final stack to remove edge effects due to aligning
+	brd = getString("Border size (pixels):", "5");
+	getDimensions(width, height, channels, slices, frames);
+	makeRectangle(brd, brd, width-(2*brd),height-(2*brd))
+	run("Crop");
+	//Enhance lUTs
+	run("Enhance Contrast", "saturated=0.35");
+	//Run z project one last time and save jpg
+	run("Z Project...", "projection=[Average Intensity]");
+	titleZAvg=getTitle();
+	saveAs("Jpeg",directory + "\\" + titleZAvg);  //Save final z projection for reference
+	run("Close"); //Close z porjection image
+	//Save file
+	fileName = getTitle();
+	saveAs("tiff",directory + "\\" + fileName);
+	//Close windows
+	while (nImages>0) { 
+          selectImage(nImages); 
+          close(); 
+      } 
+  	selectWindow("Log"); 
+   	run("Close"); 
+}
+
+
+
