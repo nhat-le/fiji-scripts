@@ -43,6 +43,14 @@
   //   saveAs("Jpeg");
   //}
 
+macro "Z Project [z]" {
+    run("Z Project...", "projection=[Average Intensity]");
+}
+
+macro "Plot z axis profile [p]" {
+    run("Plot Z-axis Profile");
+}
+
 macro "Auto resize [1]" {
     run("Size...", "width=512 height=512 depth=" + nSlices + " average interpolation=Bilinear");
 }
@@ -91,11 +99,11 @@ macro "Auto Template Registration...[6]" {
 	//Run z project one last time and save jpg
 	run("Z Project...", "projection=[Average Intensity]");
 	titleZAvg=getTitle();
-	saveAs("Jpeg",directory + "\\" + titleZAvg);  //Save final z projection for reference
+	saveAs("Jpeg",directory + "_" + titleZAvg);  //Save final z projection for reference
 	run("Close"); //Close z porjection image
 	//Save file
 	fileName = getTitle();
-	saveAs("tiff",directory + "\\" + fileName);
+	saveAs("tiff",directory + "_" + fileName);
 	//Close windows
 	while (nImages>0) { 
           selectImage(nImages); 
