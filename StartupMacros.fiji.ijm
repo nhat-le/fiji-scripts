@@ -1,3 +1,53 @@
+macro "Z Project and Concat [c]" {
+	origStack = getTitle();
+	// Make substack
+	numChannels = getNumber("Enter number of channels:", 2);
+
+	for(i = 1; i <= numChannels; i++)
+	{
+		selectWindow(origStack);
+		run("Make Substack...", "  slices=" + i + "-" + nSlices + "-" + numChannels);
+	    run("Enhance Contrast", "saturated=0.35");
+	    titleOriginal = getTitle();
+	    titleShort = replace (titleOriginal, ".tif","");
+	    run("Z Project...", "projection=[Average Intensity]");
+	    run("Set... ", "zoom=80 x=256 y=256");
+	    run("Enhance Contrast", "saturated=0.35");
+	}
+
+	//selectWindow(origStack);
+	//run("Close");
+    //titleZAvg=getTitle();
+    //run("Concatenate...", "  title=[" + titleShort + "-reg] image1=" + titleZAvg + " image2=" + titleOriginal + " image3=[-- None --]");
+}
+
+macro "Separate channels [s]" {
+	origStack = getTitle();
+	// Make substack
+	numChannels = getNumber("Enter number of channels:", 2);
+
+	for(i = 1; i <= numChannels; i++)
+	{
+		selectWindow(origStack);
+		run("Make Substack...", "  slices=" + i + "-" + nSlices + "-" + numChannels);
+	    run("Enhance Contrast", "saturated=0.35");
+	    titleOriginal = getTitle();
+	    titleShort = replace (titleOriginal, ".tif","");
+	    run("Z Project...", "projection=[Average Intensity]");
+	    run("Set... ", "zoom=80 x=256 y=256");
+	    run("Enhance Contrast", "saturated=0.35");
+	}
+
+	//selectWindow(origStack);
+	//run("Close");
+    //titleZAvg=getTitle();
+    //run("Concatenate...", "  title=[" + titleShort + "-reg] image1=" + titleZAvg + " image2=" + titleOriginal + " image3=[-- None --]");
+}
+
+
+
+
+
 // "StartupMacros"
 // The macros and macro tools in this file ("StartupMacros.txt") are
 // automatically installed in the Plugins>Macros submenu and
@@ -265,6 +315,12 @@ macro "LSMConvert...[L]" {
 		run("Scale Bar...", "width=50 height=5 font=18 color=White background=None location=[Lower Right] bold hide");
 	saveAs("Jpeg");
 }
+
+macro "Save as Tiff [s]" {
+	//path = File.openDialog("Select a file to save");
+	saveAs("Tiff");
+}
+
 macro "Auto Template Registration...[6]" {
 	// Macro to automate a double registration using Template Matching plugin.
 	//Select directory containing original .tif files
@@ -317,6 +373,20 @@ macro "Auto Template Registration...[6]" {
       } //
   	//selectWindow("Log"); 
    	//run("Close"); 
+}
+
+macro "Make substack [m]" {
+	Dialog.create("Substack parameters...");
+		Dialog.addMessage("Enter substack to extract:               ");
+		//Dialog.addNumber("Box Width", 20);
+		//Dialog.addNumber("Box Height", 20);
+	    Dialog.addString("Substack: ", "-rois01",10);
+		Dialog.show();
+	//boxWidth = Dialog.getNumber();
+	//boxHeight = Dialog.getNumber();
+	substack = Dialog.getString();
+	run("Make Substack...", "  slices=" + substack);
+	//diagSaveZip = Dialog.getCheckbox();
 }
 
 macro "Dual-Grid...[d]"{
@@ -405,7 +475,9 @@ macro "Dual-Grid...[d]"{
 	}
 }
 
-
+macro "Adjust brightness and contrast [b]" {
+	run("Brightness/Contrast...");
+}
 macro "ROI Grid...[7]"{
 	//Get image properties
 	fileName = getInfo("image.filename");
@@ -703,6 +775,10 @@ macro "Image Sequence for two channels...[8]" {
             deleting = File.delete(directory + fileList[i]);
             }
     }
+}
+
+macro "Z-Project [z]" {
+	run("Z Project...", "projection=[Average Intensity]");
 }
 macro "Image Sequence for two confocal channels...[2]" {
 	//Run Image sequence on a folder for Ch1 and Ch2. Saves .tif files with updated filename.
